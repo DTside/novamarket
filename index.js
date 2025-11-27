@@ -27,9 +27,27 @@ app.use(cors());
 app.use(express.json());
 
 const products = [
-    { id: 1, title: 'Iphone 15', price: 999, description: 'Best phone' },
-    { id: 2, title: 'Samsung S24', price: 899, description: 'Android king' },
-    { id: 3, title: 'MacBook Air', price: 1200, description: 'Laptop' }
+    { 
+        id: 1, 
+        title: 'Iphone 15', 
+        price: 999, 
+        description: 'Best phone',
+        image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=800' 
+    },
+    { 
+        id: 2, 
+        title: 'Samsung S24', 
+        price: 899, 
+        description: 'Android king',
+        image: 'https://images.unsplash.com/photo-1706698614275-9c24a646c2f3?auto=format&fit=crop&q=80&w=800' 
+    },
+    { 
+        id: 3, 
+        title: 'MacBook Air', 
+        price: 1200, 
+        description: 'Laptop',
+        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=800' 
+    }
 ];
 
 app.get('/', (req, res) => {
