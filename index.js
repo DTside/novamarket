@@ -1,97 +1,77 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const { Pool } = require('pg');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// --- БАЗА ТОВАРОВ (6 штук) ---
-// Я добавил поля image, img, imageUrl и photo одновременно, 
-// чтобы фронтенд точно увидел картинку, как бы он её ни называл.
-const products = [
-    { 
-        id: 1, 
-        title: 'Iphone 15', 
-        price: 999, 
-        description: 'Titanium design, A16 Bionic chip.',
-        image: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1696446701796-da61225697cc?auto=format&fit=crop&q=80&w=600'
-    },
-    { 
-        id: 2, 
-        title: 'Samsung S24', 
-        price: 899, 
-        description: 'Galaxy AI is here.',
-        image: 'https://images.unsplash.com/photo-1706698614275-9c24a646c2f3?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1706698614275-9c24a646c2f3?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1706698614275-9c24a646c2f3?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1706698614275-9c24a646c2f3?auto=format&fit=crop&q=80&w=600'
-    },
-    { 
-        id: 3, 
-        title: 'MacBook Air', 
-        price: 1200, 
-        description: 'Supercharged by M3.',
-        image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca4?auto=format&fit=crop&q=80&w=600'
-    },
-    { 
-        id: 4, 
-        title: 'Sony WH-1000XM5', 
-        price: 349, 
-        description: 'Noise canceling headphones.',
-        image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?auto=format&fit=crop&q=80&w=600'
-    },
-    { 
-        id: 5, 
-        title: 'Apple Watch Ultra', 
-        price: 799, 
-        description: 'Adventure awaits.',
-        image: 'https://images.unsplash.com/photo-1664713815297-9097ce1c54b6?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1664713815297-9097ce1c54b6?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1664713815297-9097ce1c54b6?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1664713815297-9097ce1c54b6?auto=format&fit=crop&q=80&w=600'
-    },
-    { 
-        id: 6, 
-        title: 'PlayStation 5', 
-        price: 499, 
-        description: 'Play Has No Limits.',
-        image: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=600',
-        img: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=600',
-        imageUrl: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=600',
-        photo: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?auto=format&fit=crop&q=80&w=600'
-    }
-];
+// --- ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ (Supabase) ---
+const pool = new Pool({
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false },
+});
 
 // --- РОУТЫ ---
 
 app.get('/', (req, res) => {
-    res.send('API is working with images!');
+    res.send('API connected to Supabase Database! 🚀');
 });
 
-// Получить ВСЕ товары
-app.get('/api/products', (req, res) => {
-    res.json(products);
+// 1. Получить ВСЕ товары из Базы Данных
+app.get('/api/products', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM products');
+        
+        // Превращаем данные из Базы в вид, удобный для Фронтенда
+        const formattedProducts = result.rows.map(row => ({
+            id: row.id,
+            // В базе у тебя может быть колонка title или name. Проверяем обе:
+            title: row.title || row.name || 'Товар без названия', 
+            price: parseFloat(row.price), // Убеждаемся, что цена - это число
+            description: row.text || row.description, // В базе колонка text
+            // Самое главное: берем image_url из базы и кладем в image
+            image: row.image_url, 
+            category: row.category
+        }));
+
+        res.json(formattedProducts);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Ошибка получения товаров" });
+    }
 });
 
-// Получить ОДИН товар
-app.get('/api/products/:id', (req, res) => {
-    const id = parseInt(req.params.id);
-    const product = products.find(p => p.id === id);
-    if (product) {
+// 2. Получить ОДИН товар по ID из Базы
+app.get('/api/products/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query('SELECT * FROM products WHERE id = $1', [id]);
+        
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: 'Товар не найден' });
+        }
+
+        const row = result.rows[0];
+        const product = {
+            id: row.id,
+            title: row.title || row.name || 'Товар без названия',
+            price: parseFloat(row.price),
+            description: row.text || row.description,
+            image: row.image_url, // Маппинг ссылки
+            category: row.category
+        };
+
         res.json(product);
-    } else {
-        res.status(404).json({ message: 'Товар не найден' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Ошибка сервера" });
     }
 });
 
