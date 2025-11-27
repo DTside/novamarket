@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 const SECRET_KEY = process.env.SECRET_KEY || "super_secret_nova_key";
 
@@ -24,6 +25,20 @@ const pool = new Pool({
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const products = [
+    { id: 1, title: 'Iphone 15', price: 999, description: 'Best phone' },
+    { id: 2, title: 'Samsung S24', price: 899, description: 'Android king' },
+    { id: 3, title: 'MacBook Air', price: 1200, description: 'Laptop' }
+];
+
+app.get('/', (req, res) => {
+    res.send('Backend is running! Go to /api/products');
+});
+
+app.get('/api/products', (req, res) => {
+    res.json(products);
+});
 
 // --- РОУТЫ ---
 
@@ -419,6 +434,9 @@ app.get('/favorites/ids/:userId', async (req, res) => {
 });
 
 // Запуск
+app.get('/', (req, res) => {
+    res.send('API is running!');
+});
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
 });
