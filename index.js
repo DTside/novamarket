@@ -39,6 +39,17 @@ app.get('/', (req, res) => {
 app.get('/api/products', (req, res) => {
     res.json(products);
 });
+// Роут для получения ОДНОГО товара по ID
+app.get('/api/products/:id', (req, res) => {
+    const id = parseInt(req.params.id); // Получаем ID из ссылки
+    const product = products.find(p => p.id === id); // Ищем в массиве
+
+    if (product) {
+        res.json(product); // Если нашли — отдаем
+    } else {
+        res.status(404).json({ message: 'Товар не найден' }); // Если нет — ошибка
+    }
+});
 
 // --- РОУТЫ ---
 
